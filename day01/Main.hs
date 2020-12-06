@@ -5,12 +5,12 @@ import Data.List
 mul :: (Integer, Integer) -> Integer
 mul (x, y) = x * y
 
-getPairs :: [Integer] -> [(Integer, Integer)]
-getPairs [] = []
-getPairs l = [(x, y) | (x:ys) <- tails l, y <- ys, x + y == 2020]
+getPairs :: [Integer] -> Integer -> [(Integer, Integer)]
+getPairs [] _ = []
+getPairs l year = [(x, y) | (x:ys) <- tails l, y <- ys, x + y == year]
 
 solve :: [Integer] -> [Integer]
-solve l = map mul (getPairs l)
+solve l = map mul (getPairs l 2020)
 
 main :: IO ()
 main = do
