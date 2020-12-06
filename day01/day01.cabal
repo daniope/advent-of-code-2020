@@ -2,12 +2,12 @@
 --  see http://haskell.org/cabal/users-guide/
 
 name:                day01
-version:             0.1.0.0
+version:             0.2.0.0
 -- synopsis:
 -- description:
 license:             BSD3
 license-file:        LICENSE
-author:              daniope
+author:              Daniela Iope
 maintainer:          daniela.iope@hotmail.com
 -- copyright:
 -- category:
