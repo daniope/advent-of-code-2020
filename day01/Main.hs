@@ -1,17 +1,29 @@
 module Main where
 
 import Data.List
+import System.IO
+
+--readInts :: String -> IO [Integer]
+--readInts file = map read (lines file)
+
+readInts :: [String] -> [Integer]
+readInts xs = map read xs
+
+readNumbers :: FilePath -> IO [Integer]
+readNumbers file = (fmap readInts . (fmap lines . readFile)) file
+
+getPairs :: [Integer] -> Integer -> [(Integer, Integer)]
+getPairs xs year = [(x, y) | (x:ys) <- tails xs, y <- ys, x + y == year]
 
 mul :: (Integer, Integer) -> Integer
 mul (x, y) = x * y
 
-getPairs :: [Integer] -> Integer -> [(Integer, Integer)]
-getPairs [] _ = []
-getPairs l year = [(x, y) | (x:ys) <- tails l, y <- ys, x + y == year]
-
 solve :: [Integer] -> [Integer]
-solve l = map mul (getPairs l 2020)
+solve xs = map mul (getPairs xs 2020)
 
 main :: IO ()
 main = do
-    print(solve [1721, 979, 366, 299, 675, 1456])
+    numbers <- readNumbers "result.txt"
+    let result = solve numbers
+    putStr "Solution: "
+    print result
