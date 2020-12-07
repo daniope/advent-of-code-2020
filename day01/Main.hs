@@ -21,9 +21,6 @@ getTrios xs year = [
     , x + y + z == year
     ]
 
-mul :: (Int, Int) -> Int
-mul (x, y) = x * y
-
 prod :: [Int] -> Int
 prod []     = 1
 prod (x:xs) = x * prod xs
