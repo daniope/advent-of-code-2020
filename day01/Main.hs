@@ -3,27 +3,24 @@ module Main where
 import Data.List
 import System.IO
 
---readInts :: String -> IO [Integer]
---readInts file = map read (lines file)
+parseInts :: [String] -> [Int]
+parseInts xs = map read xs
 
-readInts :: [String] -> [Integer]
-readInts xs = map read xs
+readNumbers :: FilePath -> IO [Int]
+readNumbers = (fmap parseInts . (fmap lines . readFile))
 
-readNumbers :: FilePath -> IO [Integer]
-readNumbers file = (fmap readInts . (fmap lines . readFile)) file
-
-getPairs :: [Integer] -> Integer -> [(Integer, Integer)]
+getPairs :: [Int] -> Int -> [(Int, Int)]
 getPairs xs year = [(x, y) | (x:ys) <- tails xs, y <- ys, x + y == year]
 
-mul :: (Integer, Integer) -> Integer
+mul :: (Int, Int) -> Int
 mul (x, y) = x * y
 
-solve :: [Integer] -> [Integer]
+solve :: [Int] -> [Int]
 solve xs = map mul (getPairs xs 2020)
 
 main :: IO ()
 main = do
-    numbers <- readNumbers "result.txt"
+    numbers <- readNumbers "input.txt"
     let result = solve numbers
     putStr "Solution: "
     print result
