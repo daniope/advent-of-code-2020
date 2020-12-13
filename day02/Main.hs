@@ -13,10 +13,13 @@ data Policy = Policy {
     , password :: String
     } deriving (Eq, Show) 
 
+integer :: CharParser st Int
+integer = fmap read (many $ satisfy isDigit)
+
 main :: IO ()
 main = do 
     { args <- getArgs
-    ; result <- parseFromFile anyChar $ head args
+    ; result <- parseFromFile integer $ head args
     ; case result of
         Left err  -> print err
         Right xs  -> print xs
