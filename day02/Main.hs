@@ -26,14 +26,16 @@ policy = do
     ; _         <- oneOf ":"
     ; _         <- space
     ; password  <- many1 letter
+    ; _         <- endOfLine
     ; return (Policy min max character password)
     }
+
+policies :: Parser [Policy]
+policies = many1 policy
 
 main :: IO ()
 main = do 
     { args <- getArgs
-    ; result <- parseFromFile policy $ head args
-    ; case result of
-        Left err  -> print err
-        Right xs  -> print xs
+    ; result <- parseFromFile policies $ head args
+    ; print result
     }
