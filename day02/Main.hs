@@ -39,11 +39,17 @@ is_valid (Policy min max character password) = do
     ; (occ >= min) && (occ <= max)
     }
 
+count_valid :: [Bool] -> Int
+count_valid bs = (sum . (map fromEnum)) bs
+
 main :: IO ()
 main = do 
     { args <- getArgs
     ; result <- parseFromFile policies $ head args
     ; case result of
         Left err  -> print err
-        Right xs  -> print $ map is_valid xs
+        Right xs  -> do
+            { putStr "Number of valid passwords: "
+            ; print $ count_valid $ map is_valid xs
+            }
     }
