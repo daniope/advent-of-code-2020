@@ -33,10 +33,17 @@ policy = do
 policies :: Parser [Policy]
 policies = many1 policy
 
-is_valid :: Policy -> Bool
-is_valid (Policy min max character password) = do
+is_1_valid :: Policy -> Bool
+is_1_valid (Policy min max character password) = do
     { let occ = length $ filter (== character) password
     ; (occ >= min) && (occ <= max)
+    }
+
+is_2_valid :: Policy -> Bool
+is_2_valid (Policy min max character password) = do
+    { let min_check = (password !! (min - 1)) == character
+    ; let max_check = (password !! (max - 1)) == character
+    ; min_check /= max_check
     }
 
 count_valid :: [Bool] -> Int
@@ -49,7 +56,9 @@ main = do
     ; case result of
         Left err  -> print err
         Right xs  -> do
-            { putStr "Number of valid passwords: "
-            ; print $ count_valid $ map is_valid xs
+            { putStr "Part 1: "
+            ; print $ count_valid $ map is_1_valid xs
+            ; putStr "Part 2: "
+            ; print $ count_valid $ map is_2_valid xs
             }
     }
