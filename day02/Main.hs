@@ -33,9 +33,17 @@ policy = do
 policies :: Parser [Policy]
 policies = many1 policy
 
+is_valid :: Policy -> Bool
+is_valid (Policy min max character password) = do
+    { let occ = length $ filter (== character) password
+    ; (occ >= min) && (occ <= max)
+    }
+
 main :: IO ()
 main = do 
     { args <- getArgs
     ; result <- parseFromFile policies $ head args
-    ; print result
+    ; case result of
+        Left err  -> print err
+        Right xs  -> print $ map is_valid xs
     }
