@@ -52,11 +52,20 @@ passport = many1 field
 passports :: Parser [Passport]
 passports = sepBy passport newline
 
+is_valid :: Passport -> Bool
+is_valid p = length (filter ((/=CID).fst) p) == 7
+
+count_valid :: [Bool] -> Int
+count_valid bs = (sum . (map fromEnum)) bs
+
 main :: IO ()
 main = do
     { args <- getArgs
     ; result <- parseFromFile passports $ head args
     ; case result of
         Left err  -> print err
-        Right xs  -> print xs
+        Right ps  -> do
+            { putStr "Valid passports: "
+            ; print $ count_valid $ map is_valid ps
+            }
     }
