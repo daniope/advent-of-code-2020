@@ -20,12 +20,6 @@ type Value = String
 type Field = (Tag, Value)
 type Passport = [Field]
 
-fieldSep :: Parser Char
-fieldSep = char ':'
-
-passportSep :: Parser Char
-passportSep = choice [space, endOfLine]
-
 tag :: Parser Tag
 tag = do
     { s <- many1 letter
@@ -41,30 +35,28 @@ tag = do
     }
 
 value :: Parser Value
-value = manyTill anyChar $ try passportSep
+value = many1 $ choice [alphaNum, (char '#')]
 
 field :: Parser Field
 field = do
     { t <- tag
-    ; _ <- fieldSep
+    ; _ <- char ':'
     ; v <- value
+    ; _ <- choice [space, endOfLine]
     ; return $ (t, v)
     }
 
 passport :: Parser Passport
 passport = many1 field
 
+passports :: Parser [Passport]
+passports = sepBy passport newline
+
 main :: IO ()
 main = do
     { args <- getArgs
-    ; result <- parseFromFile passport $ head args
-    ; print result
---    ; case result of
---        Left err  -> print err
---        Right xs  -> do
---            { putStr "Part 1: "
---            ; print $ count_valid $ map is_1_valid xs
---            ; putStr "Part 2: "
---            ; print $ count_valid $ map is_2_valid xs
---            }
+    ; result <- parseFromFile passports $ head args
+    ; case result of
+        Left err  -> print err
+        Right xs  -> print xs
     }
