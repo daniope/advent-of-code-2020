@@ -22,7 +22,7 @@ type Passport = [Field]
 
 tag :: Parser Tag
 tag = do
-    { s <- many1 letter
+    { s <- count 3 letter
     ; return $ case s of
         "byr" -> BYR
         "iyr" -> IYR
@@ -32,6 +32,7 @@ tag = do
         "ecl" -> ECL
         "pid" -> PID
         "cid" -> CID
+        _     -> error "Invalid tag"
     }
 
 value :: Parser Value
@@ -64,8 +65,5 @@ main = do
     ; result <- parseFromFile passports $ head args
     ; case result of
         Left err  -> print err
-        Right ps  -> do
-            { putStr "Valid passports: "
-            ; print $ countValid $ map hasAll ps
-            }
+        Right ps  -> putStrLn $ "Part 1: " ++ show (countValid $ map hasAll ps)
     }
