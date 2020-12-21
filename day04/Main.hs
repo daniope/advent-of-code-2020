@@ -24,7 +24,7 @@ type Passport = [Field]
 
 tag :: Parser Tag
 tag = do
-    { s <- count 3 letter
+    { s <- many1 letter
     ; return $ case s of
         "byr" -> BYR
         "iyr" -> IYR
@@ -36,9 +36,6 @@ tag = do
         "cid" -> CID
         _     -> error "Invalid tag"
     }
-
-year :: Parser Int
-year = fmap read $ many1 digit
 
 value :: Parser Value
 value = many1 $ choice [alphaNum, char '#']
@@ -83,15 +80,15 @@ isValidHeight v = do
 
 isValidHairColor :: Value -> Bool
 isValidHairColor v = do
-    { let bs = [(d `elem` ['0'..'9']) || (d `elem` ['a'..'f']) | d <- (drop 1 v)]
-    ; (v !! 0 == '#') && not (False `elem` bs)
+    { let bs = [(elem d $ ['0'..'9'] ++ ['a'..'f']) | d <- (drop 1 v)]
+    ; (v !! 0 == '#') && not (elem False bs)
     }
 
 isValidEyeColor :: Value -> Bool
-isValidEyeColor v = v `elem` ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
+isValidEyeColor v = elem v ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
 
 isValidID :: Value -> Bool
-isValidID v = (length v == 9) && not (False `elem` (map isDigit v))
+isValidID v = (length v == 9) && not (elem False (map isDigit v))
 
 isValidField :: Field -> Bool
 isValidField (BYR, v) = isValidYear (BYR, v)
@@ -104,7 +101,7 @@ isValidField (PID, v) = isValidID v
 isValidField (CID, v) = True
 
 isValidPassport :: Passport -> Bool
-isValidPassport p = hasAll p && not (False `elem` (map isValidField p))
+isValidPassport p = hasAll p && not (elem False (map isValidField p))
 
 countValid :: [Bool] -> Int
 countValid bs = (sum . (map fromEnum)) bs
