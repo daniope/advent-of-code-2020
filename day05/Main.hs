@@ -23,35 +23,30 @@ toHalf 'B' = Upper
 toHalf 'L' = Lower
 toHalf 'R' = Upper
 
-getHalf :: Half -> [Int] -> [Int] 
-getHalf Lower xs  = take (quot (length xs) 2) xs
-getHalf Upper xs  = drop (quot (length xs) 2) xs
+half :: Half -> [Int] -> [Int] 
+half Lower xs  = take (quot (length xs) 2) xs
+half Upper xs  = drop (quot (length xs) 2) xs
 
-getRow :: Pass -> [Row] -> Int
-getRow [] []     = 0  
-getRow _ [x]    = x
-getRow (s:ss) xs = getRow ss $ getHalf (toHalf s) xs
+loc :: Pass -> [Row] -> Int
+loc [] []     = 0  
+loc _ [x]     = x
+loc (s:ss) xs = loc ss $ half (toHalf s) xs
 
-getCol :: Pass -> [Col] -> Int
-getCol [] []     = 0  
-getCol _ [x]    = x
-getCol (s:ss) xs = getCol ss $ getHalf (toHalf s) xs
+seat :: Pass -> Seat
+seat ss = (loc (take 7 ss) rows, loc (drop 7 ss) cols)
 
-getSeat :: Pass -> Seat
-getSeat ss = (getRow (take 7 ss) rows, getCol (drop 7 ss) cols)
-
-getSeatID :: Pass -> SeatID
-getSeatID ss = do
-    { let seat = getSeat ss
-    ; (fst seat * 8) + (snd seat)
-    }
+seatID :: Seat -> SeatID
+seatID (r, c) = r * 8 + c
 
 readPasses :: FilePath -> IO [Pass]
 readPasses = fmap lines . readFile
+
+part1 :: [Pass] -> SeatID
+part1 ps = maximum $ map (seatID . seat) ps
 
 main :: IO ()
 main = do
     { args <- getArgs
     ; passes <- readPasses $ head args
-    ; putStrLn $ "Part 1: " ++ show (maximum $ map getSeatID passes)
+    ; putStrLn $ "Part 1: " ++ show (part1 passes)
     }
