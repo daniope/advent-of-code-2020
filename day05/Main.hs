@@ -5,10 +5,7 @@ import System.Environment
 data Half = 
       Lower
     | Upper
-    deriving (Enum, Eq, Ord, Show)
-
-rows = [0..127]
-cols = [0..7]
+    deriving (Show)
 
 type Row = Int
 type Col = Int
@@ -23,17 +20,16 @@ toHalf 'B' = Upper
 toHalf 'L' = Lower
 toHalf 'R' = Upper
 
-half :: Half -> [Int] -> [Int] 
-half Lower xs  = take (quot (length xs) 2) xs
-half Upper xs  = drop (quot (length xs) 2) xs
+half :: Half -> (Int, Int) -> (Int, Int) 
+half Lower (l, h) = (l, l + (div (h - l) 2))
+half Upper (l, h) = (l + (div (h - l) 2) + 1, h)
 
-loc :: Pass -> [Row] -> Int
-loc [] []     = 0  
-loc _ [x]     = x
-loc (s:ss) xs = loc ss $ half (toHalf s) xs
+loc :: Pass -> (Int, Int) -> Int
+loc [] x     = fst x  
+loc (s:ss) x = loc ss $ half (toHalf s) x
 
 seat :: Pass -> Seat
-seat ss = (loc (take 7 ss) rows, loc (drop 7 ss) cols)
+seat ss = (loc (take 7 ss) (0, 127), loc (drop 7 ss) (0, 7))
 
 seatID :: Seat -> SeatID
 seatID (r, c) = r * 8 + c
