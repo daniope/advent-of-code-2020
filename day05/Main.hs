@@ -53,5 +53,5 @@ main :: IO ()
 main = do
     { args <- getArgs
     ; passes <- readPasses $ head args
-    ; print $ getSeatID $ passes !! 2
+    ; putStrLn $ "Part 1: " ++ show (maximum $ map getSeatID passes)
     }
