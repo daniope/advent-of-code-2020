@@ -1,5 +1,6 @@
 module Main where
 
+import Data.List
 import System.Environment
 
 data Half = 
@@ -34,15 +35,25 @@ seat ss = (loc (take 7 ss) (0, 127), loc (drop 7 ss) (0, 7))
 seatID :: Seat -> SeatID
 seatID (r, c) = r * 8 + c
 
-readPasses :: FilePath -> IO [Pass]
-readPasses = fmap lines . readFile
+seatIDs :: [Pass] -> [SeatID]
+seatIDs ps = map (seatID . seat) ps
+
+passes :: FilePath -> IO [Pass]
+passes = fmap lines . readFile
 
 part1 :: [Pass] -> SeatID
-part1 ps = maximum $ map (seatID . seat) ps
+part1 ps = maximum $ seatIDs ps
+
+part2 :: [Pass] -> SeatID
+part2 ps = do
+    { let ids = seatIDs ps
+    ; head [ x | x <- [minimum ids..maximum ids], not $ elem x ids ]
+    }
 
 main :: IO ()
 main = do
     { args <- getArgs
-    ; passes <- readPasses $ head args
-    ; putStrLn $ "Part 1: " ++ show (part1 passes)
+    ; ps <- passes $ head args
+    ; putStrLn $ "Part 1: " ++ show (part1 ps)
+    ; putStrLn $ "Part 2: " ++ show (part2 ps)
     }
