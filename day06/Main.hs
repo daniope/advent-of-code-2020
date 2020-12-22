@@ -18,13 +18,22 @@ group = endBy1 form endOfLine
 groups :: Parser Groups
 groups = sepBy group newline
 
+answer :: Char -> Group -> Bool
+answer c []     = False
+answer c (f:fs) = elem c f || answer c fs 
+
+sheet :: Group -> [Char]
+sheet g = [ x | x <- ['a'..'z'], answer x g ]
+
+part1 :: Groups -> Int
+part1 []     = 0
+part1 (g:gs) = (length $ sheet g) + part1 gs 
+
 main :: IO ()
 main = do
     { args <- getArgs
-    ; groups <- parseFromFile groups $ head args
-    ; case groups of
+    ; input <- parseFromFile groups $ head args
+    ; case input of
         Left err  -> print err
-        Right gs  -> do
-            { putStrLn $ "Part 1: " ++ show gs
-            }
+        Right gs  -> putStrLn $ "Part 1: " ++ show (part1 gs)
     }
