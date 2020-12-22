@@ -1,6 +1,6 @@
 module Main where
 
-import Data.Char
+import Data.List
 import Text.Parsec
 import Text.Parsec.String
 import System.Environment
@@ -13,20 +13,13 @@ type Groups = [Group]
 form :: Parser Form
 form = many1 letter
 
-group :: Parser Group
-group = endBy1 form endOfLine
-
 groups :: Parser Groups
-groups = sepBy group newline
-
-answer :: Char -> Group -> Part -> Bool
-answer c [] 1     = False
-answer c [] 2     = True
-answer c (f:fs) 1 = elem c f || answer c fs 1
-answer c (f:fs) 2 = elem c f && answer c fs 2
+groups = sepBy (endBy1 form endOfLine) newline
 
 sheet :: Group -> Part -> [Char]
-sheet g p = [ x | x <- ['a'..'z'], answer x g p]
+sheet (f:[]) _ = f
+sheet (f:fs) 1 = union f $ sheet fs 1
+sheet (f:fs) 2 = intersect f $ sheet fs 2
 
 solve :: Groups -> Part -> Int
 solve [] p     = 0
