@@ -33,16 +33,14 @@ content = do
     ; return (c, n)
     }
 
-contents :: Parser [Content]
-contents = do
-    { cts <- optionMaybe $ many1 content
-    ; case cts of
-        Just c -> return c
-        Nothing -> do
-            { _ <- string "no other bags."
-            ; return []
-            }
+none :: Parser [Content]
+none = do
+    { try $ string "no other bags."
+    ; return []
     }
+
+contents :: Parser [Content]
+contents = many1 content <|> none <?> []
 
 rule :: Parser Rule
 rule = do
