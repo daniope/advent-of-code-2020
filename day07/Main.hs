@@ -1,5 +1,6 @@
 module Main where
 
+import Data.List
 import Text.Parsec
 import Text.Parsec.Char
 import Text.Parsec.String
@@ -40,7 +41,7 @@ none = do
     }
 
 contents :: Parser [Content]
-contents = many1 content <|> none <?> []
+contents = none <|> many1 content <?> []
 
 rule :: Parser Rule
 rule = do
@@ -53,12 +54,27 @@ rule = do
 rules :: Parser [Rule]
 rules = endBy1 rule endOfLine
 
+contains :: Color -> Rule -> Bool
+contains c (cl, []) = False
+contains c (cl, ct:cts) = (c == fst ct) || contains c (cl, cts)
+
+matches :: Color -> [Rule] -> [Color]
+matches c [] = []
+matches c rs = [ fst r | r <- rs, contains c r]
+
+solve1 :: Color -> [Rule] -> [Color]
+solve1 c rs = do
+    { let cls = matches c rs
+    ; union cls $ concat (map (\x -> solve1 x rs) cls)
+    }
+
 main :: IO ()
 main = do
     { args <- getArgs
     ; result <- parseFromFile rules $ head args
     ; case result of
         Left err -> print err
-        Right bs
-            -> putStrLn $ "Part 1: " ++ show bs
+        Right rs -> do
+            { putStrLn $ "\nPart 1: " ++ show (length $ solve1 "shiny gold" rs)
+            }
     }
