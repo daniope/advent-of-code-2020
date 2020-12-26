@@ -62,11 +62,28 @@ matches :: Color -> [Rule] -> [Color]
 matches c [] = []
 matches c rs = [ fst r | r <- rs, contains c r]
 
-solve1 :: Color -> [Rule] -> [Color]
-solve1 c rs = do
+allMatches :: Color -> [Rule] -> [Color]
+allMatches c rs = do
     { let cls = matches c rs
-    ; union cls $ concat (map (\x -> solve1 x rs) cls)
+    ; union cls $ concat $ map (\x -> allMatches x rs) cls
     }
+
+solve1 :: Color -> [Rule] -> Int
+solve1 c rs = length $ allMatches c rs
+
+add :: [Int] -> Int
+add [] = 0
+add (x:xs) = x + (add xs)
+
+capacity :: [Content] -> Int
+capacity cts = add $ map snd cts
+
+solve2 :: Color -> [Rule] -> Int
+solve2 c rs = capacity cts + n
+    where cts = snd $ (filter (\x -> fst x == c) rs) !! 0
+          f x = (snd x) * solve2 (fst x) rs
+          n = add $ map f cts
+
 
 main :: IO ()
 main = do
@@ -75,6 +92,7 @@ main = do
     ; case result of
         Left err -> print err
         Right rs -> do
-            { putStrLn $ "\nPart 1: " ++ show (length $ solve1 "shiny gold" rs)
+            { putStrLn $ "Part 1: " ++ show (solve1 "shiny gold" rs)
+            ; putStrLn $ "Part 2: " ++ show (solve2 "shiny gold" rs)
             }
     }
