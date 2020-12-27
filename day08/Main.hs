@@ -41,31 +41,30 @@ command = do
 commands :: Parser [Command]
 commands = endBy1 command endOfLine
 
-jump :: Command -> Int
-jump (c, a)
-    | c == JMP = a
-    | otherwise = 1
+jump :: Command -> Int -> Int
+jump (JMP, a) n = a + n
+jump _        n = 1 + n
 
-accumulate :: Command -> Int
-accumulate (c, a)
-    | c == ACC = a
-    | otherwise = 0
+accumulate :: Command -> Int -> Int
+accumulate (ACC, a) n = a + n
+accumulate _        n = n
 
 replace :: Int -> a -> [a] -> [a]
 replace i x xs = take i xs ++ [x] ++ drop (i+1) xs
 
-run :: [Command] -> [Bool] -> Int -> Int
-run cs bs i
-    | bs !! i = 0
-    | otherwise = accumulate c + (run cs nbs j)
+run1 :: [Command] -> [Int] -> Int -> Int
+run1 cs bs i
+    | i >= length cs = 0
+    | elem i bs = 0
+    | otherwise = accumulate c $ run1 cs nbs j
     where c = cs !! i
-          j = i + jump c
-          nbs = replace i True bs
+          j = jump c i
+          nbs = i : bs
 
 solve1 :: [Command] -> Int
 solve1 cs = do
     { let bs = [ False | x <- cs ]
-    ; run cs bs 0
+    ; run1 cs [] 0
     }
 
 main :: IO ()
