@@ -49,12 +49,8 @@ accumulate :: Command -> Int -> Int
 accumulate (ACC, a) n = a + n
 accumulate _        n = n
 
-replace :: Int -> a -> [a] -> [a]
-replace i x xs = take i xs ++ [x] ++ drop (i+1) xs
-
 run1 :: [Command] -> [Int] -> Int -> Int
 run1 cs bs i
-    | i >= length cs = 0
     | elem i bs = 0
     | otherwise = accumulate c $ run1 cs nbs j
     where c = cs !! i
