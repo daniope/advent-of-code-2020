@@ -63,8 +63,9 @@ matches c [] = []
 matches c rs = [ fst r | r <- rs, contains c r]
 
 allMatches :: Color -> [Rule] -> [Color]
-allMatches c rs = union cls $ concat $ map (\x -> allMatches x rs) cls
+allMatches c rs = union cls $ concat $ map f cls
     where cls = matches c rs
+          f x = allMatches x rs
 
 solve1 :: Color -> [Rule] -> Int
 solve1 c rs = length $ allMatches c rs
