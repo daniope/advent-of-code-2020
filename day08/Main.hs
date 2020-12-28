@@ -67,9 +67,9 @@ accumulate _        n = n
 
 run :: Boot -> Boot
 run b
-    | curr >= size = setStop b End
+    | curr >= size          = setStop b End
     | elem curr (history b) = setStop b InfiniteLoop
-    | otherwise = run $ Boot acc next hist (code b) None
+    | otherwise             = run $ Boot acc next hist (code b) None
     where size = length $ code b
           curr = step b
           next = jump (code b !! curr) curr
