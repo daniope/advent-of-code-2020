@@ -1,6 +1,5 @@
 module Main where
 
-import Data.List
 import Text.Parsec
 import Text.Parsec.String
 import System.Environment
@@ -13,6 +12,23 @@ data Operation =
 
 type Argument = Int
 type Command = (Operation, Argument)
+
+data Stop =
+      InfiniteLoop
+    | End
+    | None
+    deriving (Show)
+
+data Boot = Boot
+    { accumulator :: Int
+    , step        :: Int
+    , history     :: [Int]
+    , code        :: [Command]
+    , stop        :: Stop
+    } deriving (Show)
+
+setStop :: Boot -> Stop -> Boot
+setStop b s = Boot (accumulator b) (step b) (history b) (code b) s
 
 operation :: Parser Operation
 operation = do
@@ -49,19 +65,19 @@ accumulate :: Command -> Int -> Int
 accumulate (ACC, a) n = a + n
 accumulate _        n = n
 
-run1 :: [Command] -> [Int] -> Int -> Int
-run1 cs bs i
-    | elem i bs = 0
-    | otherwise = accumulate c $ run1 cs nbs j
-    where c = cs !! i
-          j = jump c i
-          nbs = i : bs
+run :: Boot -> Boot
+run b
+    | curr >= size = setStop b End
+    | elem curr (history b) = setStop b InfiniteLoop
+    | otherwise = run $ Boot acc next hist (code b) None
+    where size = length $ code b
+          curr = step b
+          next = jump (code b !! curr) curr
+          hist = curr : history b
+          acc  = accumulate (code b !! curr) (accumulator b)
 
-solve1 :: [Command] -> Int
-solve1 cs = do
-    { let bs = [ False | x <- cs ]
-    ; run1 cs [] 0
-    }
+solve1 :: [Command] -> Boot
+solve1 cs = run (Boot 0 0 [] cs None)
 
 main :: IO ()
 main = do
@@ -70,6 +86,6 @@ main = do
     ; case input of
         Left err -> print err
         Right cs -> do
-            { putStrLn $ "Part 1: " ++ show (solve1 cs)
+            { putStrLn $ "Part 1: " ++ show (accumulator $ solve1 cs)
             }
     }
