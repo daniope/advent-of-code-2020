@@ -95,14 +95,12 @@ getSteps cs = [ i | (c, i) <- zip cs [0..], fst c `elem` [JMP, NOP] ]
 solve2 :: [Command] -> [Int] -> Boot
 solve2 cs [] = run $ Boot 0 0 [] cs None
 solve2 cs t = core $ getSteps cs
-    where
-        core :: [Int] -> Boot
-        core (s:ss) = do
-            { let b = run $ Boot 0 0 [] (replace s cs) None
-            ; case (stop b) of
-                EOF -> b
-                _   -> core ss
-            }
+    where core (s:ss) = do
+              { let b = run $ Boot 0 0 [] (replace s cs) None
+              ; case (stop b) of
+                  EOF -> b
+                  _   -> core ss
+              }
 
 main :: IO ()
 main = do
