@@ -92,9 +92,8 @@ replace i cs = take i cs ++ [(o, snd c)] ++ drop (i+1) cs
 getSteps :: [Command] -> [Int]
 getSteps cs = [ i | (c, i) <- zip cs [0..], fst c `elem` [JMP, NOP] ]
 
-solve2 :: [Command] -> [Int] -> Boot
-solve2 cs [] = run $ Boot 0 0 [] cs None
-solve2 cs t = core $ getSteps cs
+solve2 :: [Command] -> Boot
+solve2 cs = core $ getSteps cs
     where core (s:ss) = do
               { let b = run $ Boot 0 0 [] (replace s cs) None
               ; case (stop b) of
@@ -110,6 +109,6 @@ main = do
         Left err -> print err
         Right cs -> do
             { putStrLn $ "Part 1: " ++ show (accumulator $ solve1 cs)
-            ; putStrLn $ "Part 2: " ++ show (accumulator $ solve2 cs $ getSteps cs)
+            ; putStrLn $ "Part 2: " ++ show (accumulator $ solve2 cs)
             }
     }
