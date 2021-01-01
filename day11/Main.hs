@@ -23,11 +23,11 @@ toStatus 'L' = Empty
 toStatus '#' = Occupied
 toStatus _   = error "Invalid status"
 
-getSize :: [String] -> MapSize
-getSize ss = (length ss, length $ head ss)
-
 readMap :: FilePath -> IO [String]
 readMap = fmap lines . readFile
+
+getSize :: [String] -> MapSize
+getSize ss = (length ss, length $ head ss)
 
 setStatus :: [String] -> Loc -> Status
 setStatus ss loc = toStatus $ (ss !! fst loc) !! snd loc
@@ -36,16 +36,16 @@ getID :: MapSize -> Loc -> ID
 getID (_, cols) (i, j) = (i * cols) + j
 
 getAdjacent :: MapSize -> Loc -> [ID]
-getAdjacent size (row, col) = filter (\x -> curr /= x) ids
-    where curr = getID size (row, col)
+getAdjacent size (row, col) = ids
+    where id = getID size (row, col)
           ids  = 
-            [ getID size (r, c)
+            [ x
             | r <- [row-1..row+1]
             , c <- [col-1..col+1]
-            , r >= 0
-            , r < fst size
-            , c >= 0
-            , c < snd size
+            , r >= 0 && r < fst size
+            , c >= 0 && c < snd size
+            , let x = getID size (r, c)
+            , x /= id
             ]
 
 maps :: [String] -> (AdjacentMap, SeatMap)
@@ -60,8 +60,7 @@ maps ss = (am, sm)
 update :: (AdjacentMap, SeatMap) -> ID -> Status
 update (am, sm) i = next
     where status = sm Map.! i
-          adjs = [ sm Map.! adj | adj <- am Map.! i ]
-          ocs = filter (==Occupied) adjs
+          ocs = filter (==Occupied) [ sm Map.! adj | adj <- am Map.! i ]
           next = case status of
                 Empty | null ocs -> Occupied
                 Occupied | length ocs >= 4 -> Empty
@@ -81,6 +80,5 @@ main :: IO ()
 main = do
     { args <-  getArgs
     ; content <- readMap $ head args
-    ; let ms = maps content
-    ; putStrLn $ "Part 1: " ++ show (solve1 ms)
+    ; putStrLn $ "Part 1: " ++ show (solve1 $ maps content)
     }
