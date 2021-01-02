@@ -23,12 +23,11 @@ toStatus 'L' = Empty
 toStatus '#' = Occupied
 toStatus _   = error "Invalid status"
 
-parse :: FilePath -> IO [[Status]]
-parse = fmap parse . (fmap lines . readFile)
-    where parse ss = [ map toStatus st | st <- ss ]
+readLines :: FilePath -> IO [String]
+readLines = fmap lines . readFile
 
-getSize :: [[Status]] -> MapSize
-getSize sts = (length sts, length $ head sts)
+getSize :: [String] -> MapSize
+getSize ss = (length ss, length $ head ss)
 
 getLocs :: MapSize -> [Loc]
 getLocs (rows, cols) = [ (i , j) | i <- [0..rows-1], j <- [0..cols-1]]
@@ -43,17 +42,19 @@ getAdjacent size (row, col) =
     , (r, c) /= (row, col)
     ]
 
-maps :: [[Status]] -> (AdjacentMap, SeatMap)
-maps ss = (am, sm)
-    where size = getSize ss
-          ls = [ (i , j) | i <- [0..(fst size)-1], j <- [0..(snd size)-1]]
-          makeAdjacent x = (x, getAdjacent size x)
-          makeSeat x = (x, (ss !! fst x) !! (snd x))
-          am = Map.fromList (map makeAdjacent ls)
-          sm = Map.fromList (map makeSeat ls)
+seatMap :: [String] -> MapSize -> SeatMap
+seatMap ss size = sm
+    where ls = getLocs size
+          makeSeat x = (x, toStatus $ (ss !! fst x) !! (snd x))
+          sm = Map.fromList $ map makeSeat ls
 
-update :: (AdjacentMap, SeatMap) -> Loc -> Status
-update (am, sm) i = next
+adjacentMap :: SeatMap -> MapSize -> AdjacentMap
+adjacentMap sm size = am
+    where makeAdjacent key _ = getAdjacent size key
+          am = Map.mapWithKey makeAdjacent sm
+
+update :: SeatMap -> AdjacentMap -> Loc -> Status
+update sm am i = next
     where status = sm Map.! i
           ocs = filter (==Occupied) [ sm Map.! adj | adj <- am Map.! i ]
           next = case status of
@@ -61,19 +62,22 @@ update (am, sm) i = next
                 Occupied | length ocs >= 4 -> Empty
                 _ -> status
 
-run :: (AdjacentMap, SeatMap) -> SeatMap
-run (am, sm) = Map.mapWithKey f sm
-    where f key x = update (am, sm) key 
+run :: SeatMap -> AdjacentMap -> SeatMap
+run sm am = Map.mapWithKey f sm
+    where f key x = update sm am key 
 
-solve1 :: (AdjacentMap, SeatMap) -> Int
-solve1 (am, sm) = if (nsm == sm)
+solve1 :: SeatMap -> AdjacentMap -> Int
+solve1 sm am = if (nsm == sm)
     then Map.size $ Map.filter (== Occupied) nsm
-    else (solve1 (am, nsm))
-    where nsm = run (am, sm)
+    else (solve1 nsm am)
+    where nsm = run sm am
 
 main :: IO ()
 main = do
     { args <-  getArgs
-    ; content <- parse $ head args
-    ; putStrLn $ "Part 1: " ++ show (solve1 $ maps content)
+    ; content <- readLines $ head args
+    ; let size = getSize content
+    ; let sm = seatMap content size
+    ; let am = adjacentMap sm size
+    ; putStrLn $ "Part 1: " ++ show (solve1 sm am)
     }
