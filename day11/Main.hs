@@ -55,13 +55,12 @@ getAdjacent sm size (row, col) = do
     }
 
 getVisible :: SeatMap -> MapSize -> Loc -> Direction -> Maybe Loc
-getVisible sm (rows, cols) (i, j) (h, v) = do
-    { if (ni >= 0 && ni < rows) && (nj >= 0 && nj < cols)
+getVisible sm (rows, cols) (i, j) (h, v)
+    = if (ni >= 0 && ni < rows) && (nj >= 0 && nj < cols)
         then case sm Map.! (ni, nj) of
             Floor -> getVisible sm (rows, cols) (ni, nj) (h, v)
             _ -> Just (ni, nj)
         else Nothing
-    }
     where (ni, nj) = (i + h, j + v)
 
 getAllVisible :: SeatMap -> MapSize -> Loc -> [Loc]
