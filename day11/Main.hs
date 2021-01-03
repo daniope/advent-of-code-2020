@@ -54,24 +54,24 @@ getAdjacent sm size (row, col) = do
             ]
     }
 
-getDirection :: SeatMap -> MapSize -> Loc -> Direction -> Maybe Loc
-getDirection sm (rows, cols) (i, j) (h, v) = do
+getVisible :: SeatMap -> MapSize -> Loc -> Direction -> Maybe Loc
+getVisible sm (rows, cols) (i, j) (h, v) = do
     { if (ni >= 0 && ni < rows) && (nj >= 0 && nj < cols)
         then case sm Map.! (ni, nj) of
-            Floor -> getDirection sm (rows, cols) (ni, nj) (h, v)
+            Floor -> getVisible sm (rows, cols) (ni, nj) (h, v)
             _ -> Just (ni, nj)
         else Nothing
     }
     where (ni, nj) = (i + h, j + v)
 
-getVisible :: SeatMap -> MapSize -> Loc -> [Loc]
-getVisible sm size (row, col) = do
+getAllVisible :: SeatMap -> MapSize -> Loc -> [Loc]
+getAllVisible sm size (row, col) = do
     { let status = sm Map.! (row, col)
     ; case status of
         Floor -> []
         _     -> do
             { let ls = [ (x, y) | x <- [-1,0,1], y <- [-1,0,1], (x, y) /= (0, 0) ]
-            ; let ds = map (\x -> getDirection sm size (row, col) x) ls
+            ; let ds = map (\x -> getVisible sm size (row, col) x) ls
             ; [ d | Just d <- ds]
             }
     }
@@ -89,7 +89,7 @@ adjacentMap sm size = zm
 
 visibleMap :: SeatMap -> MapSize -> ZoneMap
 visibleMap sm size = zm
-    where makeVisible key _ = getVisible sm size key
+    where makeVisible key _ = getAllVisible sm size key
           zm = Map.mapWithKey makeVisible sm
 
 update :: SeatMap -> ZoneMap -> Int -> Loc -> Status
