@@ -1,18 +1,17 @@
 module Main where
 
-import Prelude -- hiding (Right, Left)
 import Text.Parsec
 import Text.Parsec.String
 import System.Environment
 
 data Action
-    = N
-    | E
-    | S
-    | W
-    | F
-    | R
-    | L
+    = N -- North 
+    | E -- East
+    | S -- South
+    | W -- West
+    | F -- Forward
+    | R -- Right
+    | L -- Left
     deriving (Eq, Show)
 
 type Instruction = (Action, Int)
@@ -33,13 +32,13 @@ data Ship = Ship
 
 toAction :: Char -> Action
 toAction c = case c of
-    'N' -> N
-    'E' -> E
-    'S' -> S
-    'W' -> W
+    'N' -> N 
+    'E' -> E 
+    'S' -> S 
+    'W' -> W 
     'F' -> F
-    'R' -> R
-    'L' -> L
+    'R' -> R 
+    'L' -> L 
     otherwise -> error "Invalid direction"
 
 integer :: Parser Int
