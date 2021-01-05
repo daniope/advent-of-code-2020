@@ -4,6 +4,10 @@ import Text.Parsec
 import Text.Parsec.String
 import System.Environment
 
+data Part
+    = Part1
+    | Part2
+
 data Action
     = N -- North 
     | E -- East
@@ -22,13 +26,12 @@ type Location = (Int, Int)
 
 data Ship = Ship
     { angle     :: Float
-    , location  :: Location
+    , point     :: Location
     , wayPoint  :: Location
-    , path      :: [Instruction]
     } deriving (Show)
 
 newShip :: Ship
-newShip = Ship 0.0 (0,0) (10,1) []
+newShip = Ship 0.0 (170,38) (180,42)
 
 toAction :: Char -> Action
 toAction c = case c of
@@ -54,17 +57,24 @@ instruction = do
 instructions :: Parser [Instruction]
 instructions = endBy1 instruction endOfLine
 
-getDirection :: Angle -> Direction
-getDirection n = (round $ cos (n * pi / 180.0), round $ sin (n * pi / 180.0))
+cos' :: Angle -> Int
+cos' ag = round $ cos (ag * pi / 180.0)
 
-rotate :: Angle -> Instruction -> Angle
-rotate ag (a, n) = ag + i * (fromIntegral n :: Float)
+sin' :: Angle -> Int
+sin' ag = round $ sin (ag * pi / 180.0)
+
+getDirection :: Angle -> Direction
+getDirection n = (cos' n, sin' n)
+
+rotate :: Ship -> Instruction -> Ship
+rotate (Ship ag loc w) (a, n) = Ship nag loc w
     where i = case a of
             R -> -1
             L -> 1
+          nag = ag + i * (fromIntegral n :: Float)
 
-translate :: Angle -> Location -> Instruction -> Location
-translate ag (x, y) (a, n) = (x + i * n, y + j * n)
+translate :: Ship -> Instruction -> Ship
+translate (Ship ag (x, y) w) (a, n) = Ship ag nloc w
     where iag = case a of
             F -> ag
             E -> 0.0
@@ -72,20 +82,30 @@ translate ag (x, y) (a, n) = (x + i * n, y + j * n)
             W -> 180.0
             S -> -90.0
           (i, j) = getDirection iag
+          nloc = (x + i * n, y + j * n)
+
+rotateWaypoint :: Ship -> Instruction -> Ship
+rotateWaypoint (Ship ag (x, y) (wx, wy)) (a, n) = Ship ag (x, y) (nwx, nwy)
+    where i = case a of
+            R -> -1
+            L -> 1
+          nn = i * fromIntegral n :: Float
+          nwx = cos' nn * (wx - x) - sin' nn * (wy - y) + x
+          nwy = sin' nn * (wx - x) + cos' nn * (wy - y) + y
 
 move :: Ship -> Instruction -> Ship
-move (Ship ag loc w pt) (a, n)
-    | elem a [R, L] = Ship nag loc w (pt ++ [(a, n)])
-    | otherwise = Ship ag nloc w (pt ++ [(a, n)])
-        where nag = rotate ag (a, n)
-              nloc = translate ag loc (a, n)
+move s (a, n) = f s (a, n)
+    where f = if elem a [R, L]
+            then rotate
+            else translate
 
 manhattan :: Location -> Int
 manhattan (x, y) = abs x + abs y
 
-solve :: Ship -> [Instruction] -> Int
-solve s [] = manhattan $ location s
-solve s (i:is) = solve (move s i) is
+solve :: Part -> Ship -> [Instruction] -> Int
+solve p s [] = manhattan $ point s
+solve Part1 s (i:is) = solve Part1 (move s i) is
+solve Part2 s (i:is) = solve Part2 (move s i) is
 
 main :: IO ()
 main = do
@@ -93,5 +113,9 @@ main = do
     ; content <- parseFromFile instructions $ head args
     ; case content of
         Left err -> print err
-        Right cs -> putStrLn $ "Part 1: " ++ show (solve newShip cs)
+        Right cs -> do
+            { putStrLn $ "Part 1: " ++ show (solve Part1 newShip cs)
+            ; putStrLn $ "Part 2: " ++ show (solve Part2 newShip cs)
+            ; putStrLn $ "Part 2: " ++ show (rotateWaypoint newShip (R,180))
+            }
     }
