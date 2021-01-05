@@ -16,25 +16,19 @@ data Action
 
 type Instruction = (Action, Int)
 
-data Direction
-    = East
-    | West
-    | North
-    | South
-    deriving (Eq, Show)
-
 type Angle = Float
-type Axis = (Int, Int)
-type Location =(Int, Int)
+type Direction = (Int, Int)
+type Location = (Int, Int)
 
 data Ship = Ship
     { angle     :: Float
     , location  :: Location
+    , wayPoint  :: Location
     , path      :: [Instruction]
     } deriving (Show)
 
 newShip :: Ship
-newShip = Ship 0.0 (0,0) []
+newShip = Ship 0.0 (0,0) (10,1) []
 
 toAction :: Char -> Action
 toAction c = case c of
@@ -60,8 +54,8 @@ instruction = do
 instructions :: Parser [Instruction]
 instructions = endBy1 instruction endOfLine
 
-getAxis :: Angle -> Axis
-getAxis n = (round $ cos (n * pi / 180.0), round $ sin (n * pi / 180.0))
+getDirection :: Angle -> Direction
+getDirection n = (round $ cos (n * pi / 180.0), round $ sin (n * pi / 180.0))
 
 rotate :: Angle -> Instruction -> Angle
 rotate ag (a, n) = ag + i * (fromIntegral n :: Float)
@@ -78,12 +72,12 @@ translate ag (x, y) (a, n) = (x + i * n, y + j * n)
             N -> 90.0
             W -> 180.0
             S -> -90.0
-          (i, j) = getAxis iag
+          (i, j) = getDirection iag
 
 move :: Ship -> Instruction -> Ship
-move (Ship ag loc pt) (a, n)
-    | elem a [R, L] = Ship nag loc (pt ++ [(a, n)])
-    | otherwise = Ship ag nloc (pt ++ [(a, n)])
+move (Ship ag loc w pt) (a, n)
+    | elem a [R, L] = Ship nag loc w (pt ++ [(a, n)])
+    | otherwise = Ship ag nloc w (pt ++ [(a, n)])
         where nag = rotate ag (a, n)
               nloc = translate ag loc (a, n)
 
