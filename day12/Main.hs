@@ -39,7 +39,7 @@ toAction c = case c of
     'F' -> F
     'R' -> R 
     'L' -> L 
-    otherwise -> error "Invalid direction"
+    otherwise -> error "Invalid action"
 
 integer :: Parser Int
 integer = fmap read $ many1 digit
@@ -62,7 +62,6 @@ rotate ag (a, n) = ag + i * (fromIntegral n :: Float)
     where i = case a of
             R -> -1
             L -> 1
-            otherwise -> 0
 
 translate :: Angle -> Location -> Instruction -> Location
 translate ag (x, y) (a, n) = (x + i * n, y + j * n)
@@ -81,9 +80,11 @@ move (Ship ag loc w pt) (a, n)
         where nag = rotate ag (a, n)
               nloc = translate ag loc (a, n)
 
+manhattan :: Location -> Int
+manhattan (x, y) = abs x + abs y
+
 solve :: Ship -> [Instruction] -> Int
-solve s [] = abs x + abs y
-    where (x, y) = location s 
+solve s [] = manhattan $ location s
 solve s (i:is) = solve (move s i) is
 
 main :: IO ()
