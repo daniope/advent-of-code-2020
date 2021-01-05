@@ -31,7 +31,7 @@ data Ship = Ship
     } deriving (Show)
 
 newShip :: Ship
-newShip = Ship 0.0 (170,38) (180,42)
+newShip = Ship 0.0 (0,0) (10,1)
 
 toAction :: Char -> Action
 toAction c = case c of
@@ -66,15 +66,14 @@ sin' ag = round $ sin (ag * pi / 180.0)
 getDirection :: Angle -> Direction
 getDirection n = (cos' n, sin' n)
 
-rotate :: Ship -> Instruction -> Ship
-rotate (Ship ag loc w) (a, n) = Ship nag loc w
+rotate :: Angle -> Instruction -> Angle
+rotate ag (a, n) = ag + i * (fromIntegral n :: Float)
     where i = case a of
             R -> -1
             L -> 1
-          nag = ag + i * (fromIntegral n :: Float)
 
-translate :: Ship -> Instruction -> Ship
-translate (Ship ag (x, y) w) (a, n) = Ship ag nloc w
+translate :: Angle -> Location -> Instruction -> Location
+translate ag (x, y) (a, n) = (x + i * n, y + j * n)
     where iag = case a of
             F -> ag
             E -> 0.0
@@ -82,30 +81,34 @@ translate (Ship ag (x, y) w) (a, n) = Ship ag nloc w
             W -> 180.0
             S -> -90.0
           (i, j) = getDirection iag
-          nloc = (x + i * n, y + j * n)
 
-rotateWaypoint :: Ship -> Instruction -> Ship
-rotateWaypoint (Ship ag (x, y) (wx, wy)) (a, n) = Ship ag (x, y) (nwx, nwy)
+rotateWaypoint :: Location -> Location -> Instruction -> Location
+rotateWaypoint (x, y) (wx, wy) (a, n) = (nwx, nwy)
     where i = case a of
             R -> -1
             L -> 1
           nn = i * fromIntegral n :: Float
-          nwx = cos' nn * (wx - x) - sin' nn * (wy - y) + x
-          nwy = sin' nn * (wx - x) + cos' nn * (wy - y) + y
+          nwx = cos' nn * wx - sin' nn * wy
+          nwy = sin' nn * wx + cos' nn * wy
 
-move :: Ship -> Instruction -> Ship
-move s (a, n) = f s (a, n)
-    where f = if elem a [R, L]
-            then rotate
-            else translate
+forward :: Location -> Location -> Instruction -> Location
+forward (x, y) (wx, wy) (a, n) = (x + n * wx, y + n * wy)
+
+move :: Part -> Ship -> Instruction -> Ship
+move Part1 (Ship ag loc wloc) (a, n)
+    | elem a [R, L] = Ship (rotate ag (a, n)) loc wloc
+    | otherwise = Ship ag (translate ag loc (a, n)) wloc
+move Part2 (Ship ag loc wloc) (a, n)
+    | a == F = Ship ag (forward loc wloc (a, n)) wloc
+    | elem a [R, L] = Ship ag loc (rotateWaypoint loc wloc (a, n))
+    | otherwise = Ship ag loc (translate ag wloc (a, n))
 
 manhattan :: Location -> Int
 manhattan (x, y) = abs x + abs y
 
 solve :: Part -> Ship -> [Instruction] -> Int
 solve p s [] = manhattan $ point s
-solve Part1 s (i:is) = solve Part1 (move s i) is
-solve Part2 s (i:is) = solve Part2 (move s i) is
+solve p s (i:is) = solve p (move p s i) is
 
 main :: IO ()
 main = do
@@ -116,6 +119,5 @@ main = do
         Right cs -> do
             { putStrLn $ "Part 1: " ++ show (solve Part1 newShip cs)
             ; putStrLn $ "Part 2: " ++ show (solve Part2 newShip cs)
-            ; putStrLn $ "Part 2: " ++ show (rotateWaypoint newShip (R,180))
             }
     }
