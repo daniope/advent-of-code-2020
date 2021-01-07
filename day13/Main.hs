@@ -1,6 +1,5 @@
 module Main where
 
-import Data.List
 import Prelude hiding (id)
 import Text.Parsec
 import Text.Parsec.String
