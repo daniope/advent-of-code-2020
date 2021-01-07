@@ -1,5 +1,6 @@
 module Main where
 
+import Data.List
 import Prelude hiding (id)
 import Text.Parsec
 import Text.Parsec.String
@@ -31,11 +32,19 @@ input = do
     ; return (ts, [ i | Just i <- is ])
     }
 
+solve :: Timestamp -> [ID] -> Int
+solve ts ids = multiply $ minimum dts
+    where dt x = (x - mod ts x, x)
+          dts = map dt ids
+          multiply (dt, id) = dt * id
+
 main :: IO ()
 main = do
     { args <- getArgs
     ; result <- parseFromFile input $ head args
     ; case result of
         Left err -> print err
-        Right (ts, ids) -> putStrLn $ "Part 1: " ++ show (ts, ids)
+        Right (ts, ids) -> do
+            { putStrLn $ "Part 1: " ++ show (solve ts ids)
+            }
     }
