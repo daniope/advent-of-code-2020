@@ -7,8 +7,9 @@ import Text.Parsec
 import Text.Parsec.String
 import System.Environment
 
-type BitMask = [(Int, Int)]
+type BitMask = [(Int, Char)]
 type Value = (Int, Int)
+type Bits = String
 
 data Command = Command
     { mask :: BitMask
@@ -21,15 +22,15 @@ type Memory = Map Int Int
 integer :: Parser Int
 integer = fmap read $ many1 digit
 
-bit :: Parser (Maybe Char)
-bit = try (Just <$> digit) <|> (char 'X' >> return Nothing)
+bit :: Parser Char
+bit = oneOf ['0','1','X'] -- try (Just <$> digit) <|> (char 'X' >> return Nothing)
 
 bitMask :: Parser BitMask
 bitMask = do
     { _ <- string "mask = "
     ; bs <- many1 bit
     ; let l = length bs
-    ; return [ (i, read [b]) | (i, Just b) <- zip [l-1,l-2..0] bs ]
+    ; return $ zip [l-1,l-2..0] bs
     }
 
 value :: Parser Value
@@ -52,17 +53,19 @@ command = do
 program :: Parser Program
 program = many1 command
 
-encode :: Int -> BitMask -> Int
-encode x [] = x
-encode x ((i, b):bm) 
-    | b == 0 = encode (clearBit x i) bm
-    | b == 1 = encode (setBit x i) bm
+decode1 :: Int -> BitMask -> Int
+decode1 x [] = x
+decode1 x ((i, b):bm) = decode1 nx bm
+    where nx = case b of
+            '0' -> clearBit x i 
+            '1' -> setBit x i
+            'X' -> x
 
 runCommand :: Memory -> Command -> Memory
 runCommand mem (Command bm []) = mem
 runCommand mem (Command bm ((i,x):vs)) = runCommand nmem $ Command bm vs
     where nmem = Map.insert i nx mem
-          nx = encode x bm
+          nx = decode1 x bm
 
 runProgram :: Memory -> Program -> Memory
 runProgram mem [] = mem
