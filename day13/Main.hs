@@ -55,14 +55,6 @@ chineseRemainder (ps, rs) = mod x n
           ms = map (fst . bezout) (zip ns ps)
           x = sum $ zipWith3 (\a b c -> a * b * c) rs ms ns
 
-findTimestamp :: [(ID, Int)] -> [Int] -> Timestamp
-findTimestamp (o:os) (i:is) = if valid os
-    then ts
-    else findTimestamp (o:os) is
-    where ts = i * fst o
-          valid [] = True
-          valid ((id, dt):xs) = ((id - mod ts id) == dt) && valid xs
-
 solve2 :: [Maybe ID] -> Timestamp
 solve2 ids = chineseRemainder $ unzip os
     where os = [ (id, mod (-o) id) | (Just id, o) <- zip ids [0..] ]
