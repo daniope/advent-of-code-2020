@@ -22,13 +22,10 @@ type Memory = Map Int Int
 integer :: Parser Int
 integer = fmap read $ many1 digit
 
-bit :: Parser Char
-bit = oneOf ['0','1','X'] -- try (Just <$> digit) <|> (char 'X' >> return Nothing)
-
 bitMask :: Parser BitMask
 bitMask = do
     { _ <- string "mask = "
-    ; bs <- many1 bit
+    ; bs <- many1 $ oneOf ['0','1','X']
     ; let l = length bs
     ; return $ zip [l-1,l-2..0] bs
     }
