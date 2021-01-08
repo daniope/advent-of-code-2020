@@ -1,9 +1,8 @@
 module Main where
 
-import Numeric (showHex, showIntAtBase)
-import Data.Char (intToDigit)
 import Data.Bits hiding (bit)
-import Data.Maybe
+import Data.Map (Map)
+import qualified Data.Map as Map
 import Text.Parsec
 import Text.Parsec.String
 import System.Environment
@@ -11,12 +10,13 @@ import System.Environment
 type BitMask = [(Int, Int)]
 type Value = (Int, Int)
 
-data Instruction = Instruction
+data Command = Command
     { mask :: BitMask
     , vals :: [Value]
     } deriving (Show)
 
-type Program = [Instruction]
+type Program = [Command]
+type Memory = Map Int Int
 
 integer :: Parser Int
 integer = fmap read $ many1 digit
@@ -41,30 +41,45 @@ value = do
     ; return (loc, num)
     }
 
-instruction :: Parser Instruction
-instruction = do
+command :: Parser Command
+command = do
     { m <- bitMask
     ; _ <- endOfLine
     ; vs <- endBy value endOfLine
-    ; return $ Instruction m vs
+    ; return $ Command m vs
     }
 
 program :: Parser Program
-program = many1 instruction
+program = many1 command
 
-encode :: Value -> BitMask -> Value
-encode v [] = v
-encode (loc, x) ((i, b):bm) 
-    | b == 0 = encode (loc, clearBit x i) bm
-    | b == 1 = encode (loc, setBit x i) bm
+encode :: Int -> BitMask -> Int
+encode x [] = x
+encode x ((i, b):bm) 
+    | b == 0 = encode (clearBit x i) bm
+    | b == 1 = encode (setBit x i) bm
+
+runCommand :: Memory -> Command -> Memory
+runCommand mem (Command bm []) = mem
+runCommand mem (Command bm ((i,x):vs)) = runCommand nmem $ Command bm vs
+    where nmem = Map.insert i nx mem
+          nx = encode x bm
+
+runProgram :: Memory -> Program -> Memory
+runProgram mem [] = mem
+runProgram mem (c:cs) = runProgram nmem cs
+    where nmem = runCommand mem c
+
+solve :: Program -> Int
+solve p = sum $ Map.elems mem
+    where mem = runProgram Map.empty p
 
 main :: IO ()
 main = do
     { args <- getArgs
-    ; result <- parseFromFile instruction $ head args
+    ; result <- parseFromFile program $ head args
     ; case result of
         Left err -> print err
         Right r -> do
-            { putStrLn $ "Part 1: " ++ show r
+            { putStrLn $ "Part 1: " ++ show (solve r)
             }
     }
